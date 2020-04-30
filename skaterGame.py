@@ -3,6 +3,9 @@ import random
 
 pygame.init()
 BLACK = 0, 0, 0
+WHITE = (255, 255, 255)
+GREEN = (0, 255, 0)
+BLUE = (0, 0, 128)
 score = 0
 ####window####
 window_width = 704
@@ -25,8 +28,8 @@ bg = pygame.image.load("background.png")
 
 class Player:
     def __init__(self, player_pos_x, player_pos_y, player_width, player_height):
-        self.player_pos_x = player_pos_x
-        self.player_pos_y = player_pos_y
+        self.pos_x = player_pos_x
+        self.pos_y = player_pos_y
         self.player_width = player_width
         self.player_height = player_height
         self.velocity = 5
@@ -37,37 +40,37 @@ class Player:
         self.right = False
         self.walk_count = 0
         self.standing = True
-        self.hitbox = pygame.Rect(self.player_pos_x + 20, self.player_pos_y, 20, 60)
+        self.hitbox = pygame.Rect(self.pos_x + 20, self.pos_y, 20, 60)
 
     def draw(self, window):
         if self.walk_count + 1 >= 27:
             self.walk_count = 0
         if not self.standing:
             if self.left:
-                window.blit(walk_left[self.walk_count // 3], (self.player_pos_x, self.player_pos_y))
+                window.blit(walk_left[self.walk_count // 3], (self.pos_x, self.pos_y))
                 self.walk_count += 1
             elif self.right:
-                window.blit(walk_right[self.walk_count // 3], (self.player_pos_x, self.player_pos_y))
+                window.blit(walk_right[self.walk_count // 3], (self.pos_x, self.pos_y))
                 self.walk_count += 1
         else:
             if self.right:
-                window.blit(walk_right[0], (self.player_pos_x, self.player_pos_y))
+                window.blit(walk_right[0], (self.pos_x, self.pos_y))
             else:
-                window.blit(walk_left[0], (self.player_pos_x, self.player_pos_y))
-        self.hitbox = pygame.Rect(self.player_pos_x + 17, self.player_pos_y + 10, 31, 57)
+                window.blit(walk_left[0], (self.pos_x, self.pos_y))
+        self.hitbox = pygame.Rect(self.pos_x + 17, self.pos_y + 10, 31, 57)
         pygame.draw.rect(window, (255, 0, 0), self.hitbox, 1)
 
     def movement(self):
         keys = pygame.key.get_pressed()
 
-        if keys[pygame.K_LEFT] and character.player_pos_x > character.velocity:
-            character.player_pos_x -= character.velocity
+        if keys[pygame.K_LEFT] and character.pos_x > character.velocity:
+            character.pos_x -= character.velocity
             character.left = True
             character.right = False
             character.standing = False
 
-        elif keys[pygame.K_RIGHT] and character.player_pos_x < 852 - character.player_width - character.velocity:
-            character.player_pos_x += character.velocity
+        elif keys[pygame.K_RIGHT] and character.pos_x < window_width - character.player_width - character.velocity:
+            character.pos_x += character.velocity
             character.left = False
             character.right = True
             character.standing = False
@@ -87,7 +90,7 @@ class Player:
                 neg = 1
                 if character.jump_height < 0:
                     neg = -1
-                character.player_pos_y -= (character.jump_height ** 2) * 0.5 * neg
+                character.pos_y -= (character.jump_height ** 2) * 0.5 * neg
                 character.jump_height -= 1
             else:
                 character.jump = False
@@ -95,6 +98,10 @@ class Player:
 
     def collision(self, obs):
         return self.hitbox.colliderect(obs)
+
+    def reset(self):
+        self.pos_x = self.pos_x - 20
+        self.walk_count = 0
 
 
 class RectObstacle(pygame.Rect):
@@ -108,8 +115,7 @@ class RectObstacle(pygame.Rect):
 
     def collision(self, player: Player):
         if self.colliderect(player.hitbox):
-            player.player_pos_x = player.player_pos_x - 20
-            player.walk_count = 0
+            player.reset()
 
     def draw(self, window):
         pygame.draw.rect(window, self.colour, self, 0)
@@ -144,12 +150,17 @@ class Coin(pygame.Rect):
 character = Player(100, 265, 64, 64)
 wall = RectObstacle(200, 230, (13, 122, 35), 25, 105)
 coin = Coin(random.randint(0, window_width), 295, 16, 16)
+font = pygame.font.SysFont('comicsans', 18)
 
 
 def redraw_display():
     game_window.blit(bg, (0, 0))
-    wall.draw(game_window)
+    text = font.render(
+        'W: ' + str(window_width) + ' H: ' + str(window_height) + ' X: ' + str(character.pos_x) + ' Y: ' + str(
+            character.pos_y), 1, (0, 0, 0))
+    game_window.blit(text, (10, 10))
     coin.draw(game_window)
+    wall.draw(game_window)
     character.draw(game_window)
     pygame.display.update()
 
@@ -166,7 +177,6 @@ while run:
 
     # controls
     character.movement()
-
     redraw_display()
 
 pygame.quit()

@@ -22,6 +22,7 @@ walk_left = [pygame.image.load('L1.png'), pygame.image.load('L2.png'), pygame.im
 char = pygame.image.load('standing.png')
 bg = pygame.image.load("background.png")
 
+
 class Player:
     def __init__(self, player_pos_x, player_pos_y, player_width, player_height):
         self.player_pos_x = player_pos_x
@@ -95,10 +96,6 @@ class Player:
     def collision(self, obs):
         return self.hitbox.colliderect(obs)
 
-    def collision_occ(self):
-        self.player_pos_x = self.player_pos_x - 20
-        self.walk_count = 0
-
 
 class RectObstacle(pygame.Rect):
     def __init__(self, x, y, colour, width, height):
@@ -108,6 +105,11 @@ class RectObstacle(pygame.Rect):
         self.width = width
         self.height = height
         self.colour = colour
+
+    def collision(self, player: Player):
+        if self.colliderect(player.hitbox):
+            player.player_pos_x = player.player_pos_x - 20
+            player.walk_count = 0
 
     def draw(self, window):
         pygame.draw.rect(window, self.colour, self, 0)
@@ -124,10 +126,10 @@ class Coin(pygame.Rect):
         self.coin_image = pygame.image.load('coin.png')
         self.sound = pygame.mixer.Sound('coin.wav')
 
-    def collision(self, obs):
+    def collision(self, player: Player):
         if self.collided:
             return False
-        elif self.colliderect(obs):
+        elif self.colliderect(player.hitbox):
             self.sound.play()
             self.collided = True
             return True
@@ -159,10 +161,8 @@ while run:
         if event.type == pygame.QUIT:
             run = False
 
-    if character.collision(wall):
-        character.collision_occ()
-
-    coin.collision(character.hitbox)
+    wall.collision(character)
+    coin.collision(character)
 
     # controls
     character.movement()

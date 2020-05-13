@@ -6,7 +6,6 @@ BLACK = 0, 0, 0
 WHITE = (255, 255, 255)
 GREEN = (0, 255, 0)
 BLUE = (0, 0, 128)
-score = 0
 ####window####
 window_width = 704
 window_height = 416
@@ -25,7 +24,6 @@ walk_left = [pygame.image.load('L1.png'), pygame.image.load('L2.png'), pygame.im
 char = pygame.image.load('standing.png')
 bg = pygame.image.load("background.png")
 
-
 class Player:
     def __init__(self, player_pos_x, player_pos_y, player_width, player_height):
         self.pos_x = player_pos_x
@@ -40,7 +38,7 @@ class Player:
         self.right = False
         self.walk_count = 0
         self.standing = True
-        self.hitbox = pygame.Rect(self.pos_x + 20, self.pos_y, 20, 60)
+        self.hitbox = pygame.Rect(self.pos_x + 20, self.pos_y + 20, 20, 60)
 
     def draw(self, window):
         if self.walk_count + 1 >= 27:
@@ -124,6 +122,7 @@ class RectObstacle(pygame.Rect):
 class Coin(pygame.Rect):
     def __init__(self, x, y, width, height):
         super().__init__(x, y, width, height)
+        self.score = 0
         self.x = x
         self.y = y
         self.width = width
@@ -138,9 +137,13 @@ class Coin(pygame.Rect):
         elif self.colliderect(player.hitbox):
             self.sound.play()
             self.collided = True
+            self.score += 1
             return True
         else:
             return False
+
+    def get_score(self):
+        return self.score
 
     def draw(self, window):
         if not self.collided:
@@ -158,7 +161,9 @@ def redraw_display():
     text = font.render(
         'W: ' + str(window_width) + ' H: ' + str(window_height) + ' X: ' + str(character.pos_x) + ' Y: ' + str(
             character.pos_y), 1, (0, 0, 0))
+    score_display = font.render("Score: " + str(coin.get_score()), 1, (1, 0, 0))
     game_window.blit(text, (10, 10))
+    game_window.blit(score_display,(200, 10))
     coin.draw(game_window)
     wall.draw(game_window)
     character.draw(game_window)
@@ -176,6 +181,7 @@ while run:
     coin.collision(character)
 
     # controls
+
     character.movement()
     redraw_display()
 
